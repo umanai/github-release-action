@@ -45,6 +45,24 @@ O8xKathZkCKrsEBz6aECQQCLgqOCJz4MGIVHP4vQHgYp8YNZ+RMSfJfZA9AyAsgP
 Pc6zWtW2XuNIGHw9pDj7v1yDolm7feBXLg8/u9APwHDy
 -----END RSA PRIVATE KEY-----`
 
+/**
+ * Mocks a push whose commits carry pull requests with a mix of base refs: the release
+ * branch and an intermediate story branch.
+ */
+const mixedBaseRefsMocks = (configName) => {
+  getConfigMock(configName)
+
+  nock('https://api.github.com')
+    .post('/graphql', (body) =>
+      body.query.includes('query findCommitsWithAssociatedPullRequests')
+    )
+    .reply(200, graphqlCommitsMixedBaseRefs)
+
+  nock('https://api.github.com')
+    .get('/repos/toolmantim/release-drafter-test-project/releases?per_page=100')
+    .reply(200, [])
+}
+
 describe('release-drafter', () => {
   let probot
   let logger
@@ -2425,97 +2443,100 @@ describe('release-drafter', () => {
     })
   })
 
-  describe('with include-base-refs config', () => {
-    it('excludes pull requests merged into other branches', async () => {
-      getConfigMock('config-with-include-base-refs.yml')
-
-      nock('https://api.github.com')
-        .post('/graphql', (body) =>
-          body.query.includes('query findCommitsWithAssociatedPullRequests')
-        )
-        .reply(200, graphqlCommitsMixedBaseRefs)
-
-      nock('https://api.github.com')
-        .get(
-          '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
-        )
-        .reply(200, [])
+  describe('include-base-refs', () => {
+    it('excludes pull requests merged into other branches by default', async () => {
+      mixedBaseRefsMocks()
 
       nock('https://api.github.com')
         .post(
           '/repos/toolmantim/release-drafter-test-project/releases',
           (body) => {
-            expect(body).toMatchInlineSnapshot(`
-              Object {
-                "body": "# What's Changed
+            expect(body.body).toMatchInlineSnapshot(`
+              "# What's Changed
+
               * Add documentation (#5) @TimonVS
               * Bug fixes (#3) @TimonVS
               * 👽 Add alien technology (#1) @TimonVS
-              ",
-                "draft": true,
-                "make_latest": "true",
-                "name": "v$INPUT_VERSION (Code name: Placeholder)",
-                "prerelease": false,
-                "tag_name": "v$INPUT_VERSION",
-                "target_commitish": "refs/heads/master",
-              }
+              "
             `)
             return true
           }
         )
         .reply(200, releasePayload)
 
-      await probot.receive({
-        name: 'push',
-        payload: pushPayload,
-      })
+      await probot.receive({ name: 'push', payload: pushPayload })
+
+      expect.assertions(1)
+    })
+
+    it('replaces the default rather than adding to it', async () => {
+      mixedBaseRefsMocks('config-with-include-base-refs.yml')
+
+      nock('https://api.github.com')
+        .post(
+          '/repos/toolmantim/release-drafter-test-project/releases',
+          (body) => {
+            expect(body.body).toMatchInlineSnapshot(`
+              "# What's Changed
+              * Update dependencies (#4) @TimonVS
+              * Add big feature (#2) @TimonVS
+              "
+            `)
+            return true
+          }
+        )
+        .reply(200, releasePayload)
+
+      await probot.receive({ name: 'push', payload: pushPayload })
 
       expect.assertions(1)
     })
 
     it('matches base refs written as a regex', async () => {
-      getConfigMock('config-with-include-base-refs-regex.yml')
-
-      nock('https://api.github.com')
-        .post('/graphql', (body) =>
-          body.query.includes('query findCommitsWithAssociatedPullRequests')
-        )
-        .reply(200, graphqlCommitsMixedBaseRefs)
-
-      nock('https://api.github.com')
-        .get(
-          '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
-        )
-        .reply(200, [])
+      mixedBaseRefsMocks('config-with-include-base-refs-regex.yml')
 
       nock('https://api.github.com')
         .post(
           '/repos/toolmantim/release-drafter-test-project/releases',
           (body) => {
-            expect(body).toMatchInlineSnapshot(`
-              Object {
-                "body": "# What's Changed
-              * Add documentation (#5) @TimonVS
-              * Bug fixes (#3) @TimonVS
-              * 👽 Add alien technology (#1) @TimonVS
-              ",
-                "draft": true,
-                "make_latest": "true",
-                "name": "v$INPUT_VERSION (Code name: Placeholder)",
-                "prerelease": false,
-                "tag_name": "v$INPUT_VERSION",
-                "target_commitish": "refs/heads/master",
-              }
+            expect(body.body).toMatchInlineSnapshot(`
+              "# What's Changed
+              * Update dependencies (#4) @TimonVS
+              * Add big feature (#2) @TimonVS
+              "
             `)
             return true
           }
         )
         .reply(200, releasePayload)
 
-      await probot.receive({
-        name: 'push',
-        payload: pushPayload,
-      })
+      await probot.receive({ name: 'push', payload: pushPayload })
+
+      expect.assertions(1)
+    })
+
+    it('reports every base ref when set to an empty list', async () => {
+      mixedBaseRefsMocks('config-with-include-base-refs-empty.yml')
+
+      nock('https://api.github.com')
+        .post(
+          '/repos/toolmantim/release-drafter-test-project/releases',
+          (body) => {
+            expect(body.body).toMatchInlineSnapshot(`
+              "# What's Changed
+              * Add documentation (#5) @TimonVS
+              * Update dependencies (#4) @TimonVS
+              * Bug fixes (#3) @TimonVS
+              * Add big feature (#2) @TimonVS
+              * 👽 Add alien technology (#1) @TimonVS
+              "
+            `)
+            return true
+          }
+        )
+        .reply(200, releasePayload)
+
+      await probot.receive({ name: 'push', payload: pushPayload })
 
       expect.assertions(1)
     })

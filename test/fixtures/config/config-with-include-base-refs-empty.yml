@@ -4,5 +4,4 @@ template: |
 name-template: 'v$INPUT_VERSION (Code name: Placeholder)'
 tag-template: v$INPUT_VERSION
 version-template: $MAJOR.$MINOR.$PATCH
-include-base-refs:
-  - story/big-feature
+include-base-refs: []

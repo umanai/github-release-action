@@ -60,6 +60,13 @@ const runQuery = (kind, repo, body) => {
         /TimonVS\/release-drafter-test-repo/g,
         'toolmantim/release-drafter-test-project'
       )
+      // The fixture branches are release targets, not intermediate branches, so report
+      // every base ref as `master`. Without this the default `include-base-refs` would
+      // filter every fixture pull request out on the strategy branch name alone.
+      string = string.replaceAll(
+        /"baseRefName": "[^"]*"/g,
+        '"baseRefName": "master"'
+      )
       fs.writeFileSync(
         path.resolve(
           __dirname,

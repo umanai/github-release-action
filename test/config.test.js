@@ -1,4 +1,7 @@
-const { DEFAULT_CONFIG } = require('../lib/default-config')
+const {
+  DEFAULT_CONFIG,
+  DEFAULT_INCLUDE_BASE_REFS,
+} = require('../lib/default-config')
 const { getConfig } = require('../lib/config')
 const { SORT_DIRECTIONS } = require('../lib/sort-pull-requests')
 
@@ -25,6 +28,7 @@ describe('getConfig', () => {
       ...DEFAULT_CONFIG,
       template: '$CHANGES',
       references: ['master'],
+      'include-base-refs': [...DEFAULT_INCLUDE_BASE_REFS],
     })
   })
 

@@ -93,7 +93,7 @@
       }
     },
     "include-base-refs": {
-      "default": [],
+      "default": ["development", "master"],
       "type": "array",
       "items": {
         "type": "string"

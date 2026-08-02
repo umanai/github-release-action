@@ -142628,6 +142628,10 @@ const findCommitsWithAssociatedPullRequestsQuery = /* GraphQL */ `
  *
  * Entries are matched exactly, unless they are written as `/pattern/flags`, in which
  * case they are matched as a regular expression. An empty list disables the filter.
+ *
+ * A pull request whose base ref is unknown is kept: dropping a change because a field
+ * is missing from the response would silently shrink the release notes, which is worse
+ * than reporting a change that should have been filtered out.
  */
 const getBaseRefMatcher = (includeBaseRefs) => {
   const matchers = includeBaseRefs.map((baseRef) =>
@@ -142637,6 +142641,8 @@ const getBaseRefMatcher = (includeBaseRefs) => {
   )
 
   return (baseRefName) =>
+    baseRefName === undefined ||
+    baseRefName === null ||
     matchers.some((matcher) => {
       // A parsed regex may carry the `g` flag, which makes `test` stateful.
       matcher.lastIndex = 0
@@ -142940,7 +142946,6 @@ const DEFAULT_CONFIG = Object.freeze({
   'exclude-labels': [],
   'include-labels': [],
   'include-paths': [],
-  'include-base-refs': [],
   'exclude-contributors': [],
   'no-contributors-template': 'No contributors',
   replacers: [],
@@ -142958,7 +142963,20 @@ const DEFAULT_CONFIG = Object.freeze({
   footer: '',
 })
 
+/**
+ * The base branches reported on when a repository does not configure
+ * `include-base-refs` itself.
+ *
+ * Deliberately kept out of DEFAULT_CONFIG: `validateSchema` deep-merges
+ * DEFAULT_CONFIG with the repository config, and deepmerge concatenates arrays, so a
+ * non-empty default there would be appended to a repository's own list instead of
+ * being replaced by it. Applied as a Joi default instead, which only fills the key in
+ * when the repository omits it.
+ */
+const DEFAULT_INCLUDE_BASE_REFS = Object.freeze(['development', 'master'])
+
 exports.DEFAULT_CONFIG = DEFAULT_CONFIG
+exports.DEFAULT_INCLUDE_BASE_REFS = DEFAULT_INCLUDE_BASE_REFS
 
 
 /***/ }),
@@ -143564,7 +143582,10 @@ exports.updateRelease = updateRelease
 const _ = __nccwpck_require__(90250)
 const Joi = __nccwpck_require__(20918)
 const { SORT_BY, SORT_DIRECTIONS } = __nccwpck_require__(11940)
-const { DEFAULT_CONFIG } = __nccwpck_require__(85869)
+const {
+  DEFAULT_CONFIG,
+  DEFAULT_INCLUDE_BASE_REFS,
+} = __nccwpck_require__(85869)
 const {
   validateReplacers,
   validateAutolabeler,
@@ -143624,7 +143645,7 @@ const schema = (context) => {
 
       'include-base-refs': Joi.array()
         .items(Joi.string())
-        .default(DEFAULT_CONFIG['include-base-refs']),
+        .default([...DEFAULT_INCLUDE_BASE_REFS]),
 
       'exclude-contributors': Joi.array()
         .items(Joi.string())

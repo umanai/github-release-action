@@ -42,7 +42,7 @@
                       ]
                     },
                     "merged": true,
-                    "baseRefName": "merge-commit",
+                    "baseRefName": "master",
                     "headRefName": "add-documentation"
                   }
                 ]
@@ -119,7 +119,7 @@
                       ]
                     },
                     "merged": true,
-                    "baseRefName": "merge-commit",
+                    "baseRefName": "master",
                     "headRefName": "fix/bug-fixes"
                   }
                 ]
@@ -200,7 +200,7 @@
                       ]
                     },
                     "merged": true,
-                    "baseRefName": "merge-commit",
+                    "baseRefName": "master",
                     "headRefName": "feature/alien-technology"
                   }
                 ]
@@ -239,7 +239,7 @@
                       ]
                     },
                     "merged": true,
-                    "baseRefName": "merge-commit",
+                    "baseRefName": "master",
                     "headRefName": "add-documentation"
                   }
                 ]
@@ -278,7 +278,7 @@
                       ]
                     },
                     "merged": true,
-                    "baseRefName": "merge-commit",
+                    "baseRefName": "master",
                     "headRefName": "add-documentation"
                   }
                 ]
@@ -390,7 +390,7 @@
                       ]
                     },
                     "merged": true,
-                    "baseRefName": "merge-commit",
+                    "baseRefName": "master",
                     "headRefName": "fix/bug-fixes"
                   }
                 ]
@@ -432,7 +432,7 @@
                       ]
                     },
                     "merged": true,
-                    "baseRefName": "merge-commit",
+                    "baseRefName": "master",
                     "headRefName": "fix/bug-fixes"
                   }
                 ]
@@ -555,7 +555,7 @@
                       ]
                     },
                     "merged": true,
-                    "baseRefName": "merge-commit",
+                    "baseRefName": "master",
                     "headRefName": "feature/alien-technology"
                   }
                 ]

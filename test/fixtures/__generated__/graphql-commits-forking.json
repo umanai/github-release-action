@@ -38,7 +38,7 @@
                       "nodes": []
                     },
                     "merged": true,
-                    "baseRefName": "forking",
+                    "baseRefName": "master",
                     "headRefName": "forking"
                   }
                 ]
@@ -77,7 +77,7 @@
                       ]
                     },
                     "merged": true,
-                    "baseRefName": "forking",
+                    "baseRefName": "master",
                     "headRefName": "add-documentation"
                   },
                   {
@@ -97,7 +97,7 @@
                       "nodes": []
                     },
                     "merged": true,
-                    "baseRefName": "forking",
+                    "baseRefName": "master",
                     "headRefName": "forking"
                   }
                 ]
@@ -132,7 +132,7 @@
                       "nodes": []
                     },
                     "merged": true,
-                    "baseRefName": "forking",
+                    "baseRefName": "master",
                     "headRefName": "chore/update-dependencies"
                   },
                   {
@@ -152,7 +152,7 @@
                       "nodes": []
                     },
                     "merged": true,
-                    "baseRefName": "forking",
+                    "baseRefName": "master",
                     "headRefName": "forking"
                   }
                 ]
@@ -194,7 +194,7 @@
                       ]
                     },
                     "merged": true,
-                    "baseRefName": "forking",
+                    "baseRefName": "master",
                     "headRefName": "fix/bug-fixes"
                   },
                   {
@@ -214,7 +214,7 @@
                       "nodes": []
                     },
                     "merged": true,
-                    "baseRefName": "forking",
+                    "baseRefName": "master",
                     "headRefName": "forking"
                   }
                 ]
@@ -256,7 +256,7 @@
                       ]
                     },
                     "merged": true,
-                    "baseRefName": "forking",
+                    "baseRefName": "master",
                     "headRefName": "fix/bug-fixes"
                   },
                   {
@@ -276,7 +276,7 @@
                       "nodes": []
                     },
                     "merged": true,
-                    "baseRefName": "forking",
+                    "baseRefName": "master",
                     "headRefName": "forking"
                   }
                 ]
@@ -318,7 +318,7 @@
                       ]
                     },
                     "merged": true,
-                    "baseRefName": "forking",
+                    "baseRefName": "master",
                     "headRefName": "feature/big-feature"
                   },
                   {
@@ -338,7 +338,7 @@
                       "nodes": []
                     },
                     "merged": true,
-                    "baseRefName": "forking",
+                    "baseRefName": "master",
                     "headRefName": "forking"
                   }
                 ]
@@ -380,7 +380,7 @@
                       ]
                     },
                     "merged": true,
-                    "baseRefName": "forking",
+                    "baseRefName": "master",
                     "headRefName": "feature/alien-technology"
                   },
                   {
@@ -400,7 +400,7 @@
                       "nodes": []
                     },
                     "merged": true,
-                    "baseRefName": "forking",
+                    "baseRefName": "master",
                     "headRefName": "forking"
                   }
                 ]
@@ -439,7 +439,7 @@
                       ]
                     },
                     "merged": true,
-                    "baseRefName": "merge-commit",
+                    "baseRefName": "master",
                     "headRefName": "add-documentation"
                   }
                 ]
@@ -478,7 +478,7 @@
                       ]
                     },
                     "merged": true,
-                    "baseRefName": "merge-commit",
+                    "baseRefName": "master",
                     "headRefName": "add-documentation"
                   }
                 ]
@@ -513,7 +513,7 @@
                       "nodes": []
                     },
                     "merged": true,
-                    "baseRefName": "merge-commit",
+                    "baseRefName": "master",
                     "headRefName": "chore/update-dependencies"
                   }
                 ]
@@ -548,7 +548,7 @@
                       "nodes": []
                     },
                     "merged": true,
-                    "baseRefName": "merge-commit",
+                    "baseRefName": "master",
                     "headRefName": "chore/update-dependencies"
                   }
                 ]
@@ -587,7 +587,7 @@
                       ]
                     },
                     "merged": true,
-                    "baseRefName": "merge-commit",
+                    "baseRefName": "master",
                     "headRefName": "feature/alien-technology"
                   }
                 ]
