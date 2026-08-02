@@ -14,6 +14,7 @@ const preReleasePayload = require('./fixtures/pre-release.json')
 const pushNonMasterPayload = require('./fixtures/push-non-master-branch.json')
 const graphqlCommitsNoPRsPayload = require('./fixtures/graphql-commits-no-prs.json')
 const graphqlCommitsMergeCommit = require('./fixtures/__generated__/graphql-commits-merge-commit.json')
+const graphqlCommitsMixedBaseRefs = require('./fixtures/graphql-commits-mixed-base-refs.json')
 const graphqlNullIncludePathMergeCommit = require('./fixtures/__generated__/graphql-include-null-path-merge-commit.json')
 const graphqlIncludePathMergeCommit = require('./fixtures/__generated__/graphql-include-path-src-5.md-merge-commit.json')
 const graphqlCommitsEmpty = require('./fixtures/graphql-commits-empty.json')
@@ -2418,6 +2419,102 @@ describe('release-drafter', () => {
       await probot.receive({
         name: 'push',
         payload,
+      })
+
+      expect.assertions(1)
+    })
+  })
+
+  describe('with include-base-refs config', () => {
+    it('excludes pull requests merged into other branches', async () => {
+      getConfigMock('config-with-include-base-refs.yml')
+
+      nock('https://api.github.com')
+        .post('/graphql', (body) =>
+          body.query.includes('query findCommitsWithAssociatedPullRequests')
+        )
+        .reply(200, graphqlCommitsMixedBaseRefs)
+
+      nock('https://api.github.com')
+        .get(
+          '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+        )
+        .reply(200, [])
+
+      nock('https://api.github.com')
+        .post(
+          '/repos/toolmantim/release-drafter-test-project/releases',
+          (body) => {
+            expect(body).toMatchInlineSnapshot(`
+              Object {
+                "body": "# What's Changed
+              * Add documentation (#5) @TimonVS
+              * Bug fixes (#3) @TimonVS
+              * 👽 Add alien technology (#1) @TimonVS
+              ",
+                "draft": true,
+                "make_latest": "true",
+                "name": "v$INPUT_VERSION (Code name: Placeholder)",
+                "prerelease": false,
+                "tag_name": "v$INPUT_VERSION",
+                "target_commitish": "refs/heads/master",
+              }
+            `)
+            return true
+          }
+        )
+        .reply(200, releasePayload)
+
+      await probot.receive({
+        name: 'push',
+        payload: pushPayload,
+      })
+
+      expect.assertions(1)
+    })
+
+    it('matches base refs written as a regex', async () => {
+      getConfigMock('config-with-include-base-refs-regex.yml')
+
+      nock('https://api.github.com')
+        .post('/graphql', (body) =>
+          body.query.includes('query findCommitsWithAssociatedPullRequests')
+        )
+        .reply(200, graphqlCommitsMixedBaseRefs)
+
+      nock('https://api.github.com')
+        .get(
+          '/repos/toolmantim/release-drafter-test-project/releases?per_page=100'
+        )
+        .reply(200, [])
+
+      nock('https://api.github.com')
+        .post(
+          '/repos/toolmantim/release-drafter-test-project/releases',
+          (body) => {
+            expect(body).toMatchInlineSnapshot(`
+              Object {
+                "body": "# What's Changed
+              * Add documentation (#5) @TimonVS
+              * Bug fixes (#3) @TimonVS
+              * 👽 Add alien technology (#1) @TimonVS
+              ",
+                "draft": true,
+                "make_latest": "true",
+                "name": "v$INPUT_VERSION (Code name: Placeholder)",
+                "prerelease": false,
+                "tag_name": "v$INPUT_VERSION",
+                "target_commitish": "refs/heads/master",
+              }
+            `)
+            return true
+          }
+        )
+        .reply(200, releasePayload)
+
+      await probot.receive({
+        name: 'push',
+        payload: pushPayload,
       })
 
       expect.assertions(1)

@@ -92,6 +92,13 @@
         "type": "string"
       }
     },
+    "include-base-refs": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "exclude-contributors": {
       "default": [],
       "type": "array",
@@ -117,6 +124,18 @@
       "default": false,
       "type": "boolean"
     },
+    "prerelease-identifier": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [""]
+        },
+        {
+          "default": "",
+          "type": "string"
+        }
+      ]
+    },
     "latest": {
       "anyOf": [
         {
@@ -136,18 +155,6 @@
     "include-pre-releases": {
       "default": false,
       "type": "boolean"
-    },
-    "prerelease-identifier": {
-      "anyOf": [
-        {
-          "type": "string",
-          "enum": [""]
-        },
-        {
-          "default": "",
-          "type": "string"
-        }
-      ]
     },
     "commitish": {
       "anyOf": [
