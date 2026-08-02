@@ -1,4 +1,4 @@
-import { A as setOutput, C as stringbool, D as getInput, E as error, M as __commonJSMin, N as __toESM, O as info, S as string, T as debug, _ as array, a as parseCommitishForRelease, b as number, c as executeGraphql, d as getPullRequestsChangedFiles, f as composeConfigGet, g as _enum, h as ZodDefault, i as sharedInputSchema, j as warning, k as setFailed, l as paginateGraphql, m as context, n as stringToRegex, o as FindCommitsInComparisonDocument, p as getOctokit, r as escapeStringRegexp, s as FindRecentMergedPullRequestsDocument, t as require_ignore, v as boolean, w as union, x as object, y as literal } from "../../chunks/ignore.js";
+import { A as setFailed, C as string, D as error, E as debug, M as warning, N as __commonJSMin, O as getInput, P as __toESM, S as object, T as union, _ as _enum, a as sharedInputSchema, b as literal, c as FindRecentMergedPullRequestsDocument, f as getPullRequestsChangedFiles, g as ZodDefault, h as context, i as escapeStringRegexp, j as setOutput, k as info, l as executeGraphql, m as getOctokit, n as stringToRegex, o as parseCommitishForRelease, p as composeConfigGet, r as require_lib, s as FindCommitsInComparisonDocument, t as require_ignore, u as paginateGraphql, v as array, w as stringbool, x as number, y as boolean } from "../../chunks/ignore.js";
 //#region src/actions/drafter/config/schemas/common-config.schema.ts
 /**
 * Configuration parameters that can be specified in both
@@ -95,6 +95,18 @@ var getActionInput = () => {
 };
 //#endregion
 //#region src/actions/drafter/config/schemas/config.schema.ts
+/**
+* The base branches reported on when a repository does not configure
+* `include-base-refs` itself.
+*
+* Covers both mainline names: a repository releasing from `main` would otherwise get
+* an empty set of changes with no error, which is a hard failure to spot.
+*/
+var DEFAULT_INCLUDE_BASE_REFS = [
+	"development",
+	"master",
+	"main"
+];
 /**
 * A single set of predicates that are combined with AND logic.
 * All specified predicates must be satisfied for a change to match.
@@ -380,6 +392,20 @@ var exclusiveConfigSchema = object({
 	* @deprecated Use a `type: pre-exclude` category with `when.paths` instead.
 	*/
 	"exclude-paths": array(string()).optional().default([]),
+	/**
+	* Restrict changes included in the release notes to only the pull requests merged
+	* into one of these base branches.
+	*
+	* GitHub associates a commit with every merged pull request that contains it, so a
+	* pull request opened against a long-lived story branch is reported next to the pull
+	* request that merged that story branch into the mainline, and the same work is
+	* listed twice. Restricting the base branches keeps the intermediate ones out.
+	*
+	* Entries match the base branch name exactly, unless written as `/pattern/flags`, in
+	* which case they are matched as a regular expression. Setting this replaces the
+	* default rather than adding to it; an empty array disables the filter.
+	*/
+	"include-base-refs": array(string()).optional().default([...DEFAULT_INCLUDE_BASE_REFS]),
 	/**
 	* Exclude specific usernames from the generated `$CONTRIBUTORS` variable.
 	*/
@@ -3199,6 +3225,29 @@ var findRecentMergedPullRequests = async (params) => {
 	return missingPRs.filter((pr) => pr != null);
 };
 //#endregion
+//#region src/actions/drafter/lib/find-pull-requests/matches-base-ref.ts
+var import_lib = /* @__PURE__ */ __toESM(require_lib(), 1);
+/**
+* Builds a predicate that decides whether a pull request's base branch is one the
+* release notes should report on.
+*
+* Entries are matched exactly, unless they are written as `/pattern/flags`, in which
+* case they are matched as a regular expression. Exact matching is deliberate: a base
+* branch is an identifier rather than free text, and substring matching would let
+* `main` select `maintenance/1.x`.
+*
+* A pull request whose base ref is unknown is kept. Dropping a change because a field
+* is missing from the response would silently shrink the release notes, which is worse
+* than reporting a change that should have been filtered out.
+*/
+var getBaseRefMatcher = (includeBaseRefs) => {
+	const matchers = includeBaseRefs.map((baseRef) => /^\/.+\/[AJUXgimsux]*$/.test(baseRef) ? (0, import_lib.default)(baseRef) : { test: (value) => value === baseRef });
+	return (baseRefName) => baseRefName == null || matchers.some((matcher) => {
+		if (matcher instanceof RegExp) matcher.lastIndex = 0;
+		return matcher.test(baseRefName);
+	});
+};
+//#endregion
 //#region src/actions/drafter/lib/find-pull-requests/find-pull-requests.ts
 var findNewContributorLogins = async (pullRequests) => {
 	const firstMergedAtByLogin = /* @__PURE__ */ new Map();
@@ -3222,7 +3271,7 @@ var findPullRequests = async (params) => {
 		headRef: params.config.commitish,
 		withPullRequestBody: params.config["change-template"].includes("$BODY"),
 		withPullRequestURL: params.config["change-template"].includes("$URL"),
-		withBaseRefName: params.config["change-template"].includes("$BASE_REF_NAME"),
+		withBaseRefName: params.config["change-template"].includes("$BASE_REF_NAME") || params.config["include-base-refs"].length > 0,
 		withHeadRefName: params.config["change-template"].includes("$HEAD_REF_NAME"),
 		pullRequestLimit: params.config["pull-request-limit"],
 		historyLimit: params.config["history-limit"]
@@ -3258,7 +3307,15 @@ var findPullRequests = async (params) => {
 			withHeadRefName: sharedComparisonParams.withHeadRefName
 		}
 	});
-	const pullRequests = [...pullRequestsRaw, ...recoveredPRs].filter((pr) => pr.baseRepository?.nameWithOwner === `${context.repo.owner}/${context.repo.repo}` && pr.merged);
+	const mergedPullRequests = [...pullRequestsRaw, ...recoveredPRs].filter((pr) => pr.baseRepository?.nameWithOwner === `${context.repo.owner}/${context.repo.repo}` && pr.merged);
+	const includeBaseRefs = params.config["include-base-refs"];
+	let pullRequests = mergedPullRequests;
+	if (includeBaseRefs.length > 0) {
+		const matchesBaseRef = getBaseRefMatcher(includeBaseRefs);
+		pullRequests = mergedPullRequests.filter((pr) => matchesBaseRef(pr.baseRefName));
+		const excludedCount = mergedPullRequests.length - pullRequests.length;
+		if (excludedCount > 0) info(`Excluded ${excludedCount} pull request(s) not merged into ${includeBaseRefs.join(", ")}.`);
+	}
 	const shouldLoadPullRequestChangedFiles = needsPullRequestChangedFiles(params.config.categories);
 	const pullRequestChangedFiles = shouldLoadPullRequestChangedFiles ? await getPullRequestsChangedFiles({
 		owner: context.repo.owner,

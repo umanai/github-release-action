@@ -350,3 +350,76 @@ describe('findPullRequests', () => {
     ).rejects.toThrow('Failed to list changed files for pull request #7.')
   })
 })
+
+describe('findPullRequests include-base-refs', () => {
+  const lastRelease = { tag_name: 'v1.0.0' } as Awaited<
+    ReturnType<
+      typeof import('#src/actions/drafter/lib/find-previous-releases/index.ts').findPreviousReleases
+    >
+  >['lastRelease']
+
+  /** A release-branch pull request, and one merged into an intermediate story branch. */
+  const makeMixedBaseRefCommits = () => {
+    const onRelease = makeCommit('on-release-branch', 1)
+    const onStory = makeCommit('on-story-branch', 2)
+    const storyPullRequest = onStory.associatedPullRequests.nodes[0]
+    if (storyPullRequest) storyPullRequest.baseRefName = 'story/big-feature'
+    return [onRelease, onStory]
+  }
+
+  const findWith = async (
+    include?: string[],
+  ): Promise<Array<number | undefined>> => {
+    const result = await findPullRequests({
+      lastRelease,
+      config: mergeInputAndConfig({
+        config: configSchema.parse({
+          template: '$CHANGES',
+          commitish: 'refs/heads/main',
+          ...(include === undefined ? {} : { 'include-base-refs': include }),
+        }),
+        input: commonConfigSchema.parse({}),
+      }),
+    })
+    return result.pullRequests.map((pullRequest) => pullRequest.number).sort()
+  }
+
+  beforeEach(async () => {
+    await mockContext('push')
+    localMocks.findCommitsInComparison.mockReset()
+    localMocks.graphql.mockReset()
+    localMocks.findCommitsInComparison.mockResolvedValue(
+      makeMixedBaseRefCommits(),
+    )
+  })
+
+  it('excludes pull requests merged into other branches by default', async () => {
+    expect(await findWith()).toEqual([1])
+  })
+
+  it('replaces the default rather than adding to it', async () => {
+    expect(await findWith(['story/big-feature'])).toEqual([2])
+  })
+
+  it('matches base refs written as a regex', async () => {
+    expect(await findWith(['/^story\\/.+$/'])).toEqual([2])
+  })
+
+  it('matches exactly, so a name is not treated as a substring', async () => {
+    expect(await findWith(['story'])).toEqual([])
+  })
+
+  it('reports every base ref when set to an empty list', async () => {
+    expect(await findWith([])).toEqual([1, 2])
+  })
+
+  it('keeps a pull request whose base ref is missing', async () => {
+    const commits = makeMixedBaseRefCommits()
+    const pullRequest = commits[1]?.associatedPullRequests.nodes[0]
+    if (pullRequest)
+      (pullRequest as { baseRefName?: string }).baseRefName = undefined
+    localMocks.findCommitsInComparison.mockResolvedValue(commits)
+
+    expect(await findWith()).toEqual([1, 2])
+  })
+})

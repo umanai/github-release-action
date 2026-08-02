@@ -13,6 +13,15 @@ import {
 import { commonConfigSchema } from './common-config.schema.ts'
 
 /**
+ * The base branches reported on when a repository does not configure
+ * `include-base-refs` itself.
+ *
+ * Covers both mainline names: a repository releasing from `main` would otherwise get
+ * an empty set of changes with no error, which is a hard failure to spot.
+ */
+export const DEFAULT_INCLUDE_BASE_REFS = ['development', 'master', 'main']
+
+/**
  * A single set of predicates that are combined with AND logic.
  * All specified predicates must be satisfied for a change to match.
  */
@@ -308,6 +317,22 @@ export const exclusiveConfigSchema = object({
    * @deprecated Use a `type: pre-exclude` category with `when.paths` instead.
    */
   'exclude-paths': array(string()).optional().default([]),
+  /**
+   * Restrict changes included in the release notes to only the pull requests merged
+   * into one of these base branches.
+   *
+   * GitHub associates a commit with every merged pull request that contains it, so a
+   * pull request opened against a long-lived story branch is reported next to the pull
+   * request that merged that story branch into the mainline, and the same work is
+   * listed twice. Restricting the base branches keeps the intermediate ones out.
+   *
+   * Entries match the base branch name exactly, unless written as `/pattern/flags`, in
+   * which case they are matched as a regular expression. Setting this replaces the
+   * default rather than adding to it; an empty array disables the filter.
+   */
+  'include-base-refs': array(string())
+    .optional()
+    .default([...DEFAULT_INCLUDE_BASE_REFS]),
   /**
    * Exclude specific usernames from the generated `$CONTRIBUTORS` variable.
    */

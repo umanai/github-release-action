@@ -103,6 +103,13 @@
         "type": "string"
       }
     },
+    "include-base-refs": {
+      "default": ["development", "master", "main"],
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "exclude-contributors": {
       "default": [],
       "type": "array",

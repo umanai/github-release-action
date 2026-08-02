@@ -9,6 +9,7 @@ import {
   findRecentMergedPullRequests,
   type RecentMergedPullRequest,
 } from './find-recent-merged-pull-requests.ts'
+import { getBaseRefMatcher } from './matches-base-ref.ts'
 
 const findNewContributorLogins = async (
   pullRequests: Array<{
@@ -64,7 +65,8 @@ export const findPullRequests = async (params: {
     withPullRequestBody: params.config['change-template'].includes('$BODY'),
     withPullRequestURL: params.config['change-template'].includes('$URL'),
     withBaseRefName:
-      params.config['change-template'].includes('$BASE_REF_NAME'),
+      params.config['change-template'].includes('$BASE_REF_NAME') ||
+      params.config['include-base-refs'].length > 0,
     withHeadRefName:
       params.config['change-template'].includes('$HEAD_REF_NAME'),
     pullRequestLimit: params.config['pull-request-limit'],
@@ -132,7 +134,7 @@ export const findPullRequests = async (params: {
             withHeadRefName: sharedComparisonParams.withHeadRefName,
           },
         })
-  const pullRequests: Array<
+  const mergedPullRequests: Array<
     (typeof pullRequestsRaw)[number] | RecentMergedPullRequest
   > = [...pullRequestsRaw, ...recoveredPRs].filter(
     (pr) =>
@@ -144,6 +146,24 @@ export const findPullRequests = async (params: {
       // Ensure PR is merged
       pr.merged,
   )
+
+  // Drop pull requests merged into intermediate branches, so work that reached the
+  // release through a story branch is reported once rather than once per part.
+  const includeBaseRefs = params.config['include-base-refs']
+  let pullRequests = mergedPullRequests
+  if (includeBaseRefs.length > 0) {
+    const matchesBaseRef = getBaseRefMatcher(includeBaseRefs)
+    pullRequests = mergedPullRequests.filter((pr) =>
+      matchesBaseRef(pr.baseRefName),
+    )
+
+    const excludedCount = mergedPullRequests.length - pullRequests.length
+    if (excludedCount > 0) {
+      core.info(
+        `Excluded ${excludedCount} pull request(s) not merged into ${includeBaseRefs.join(', ')}.`,
+      )
+    }
+  }
   const shouldLoadPullRequestChangedFiles = needsPullRequestChangedFiles(
     params.config.categories,
   )

@@ -129,6 +129,7 @@ You can configure Release Drafter using the following key in your
 | `change-title-escapes`           | Optional | Characters to escape in `$TITLE` when inserting into `change-template` so that they are not interpreted as Markdown format characters. Default: `""`                                                                                                                                                                                                                                                                                                                            |
 | `no-changes-template`            | Optional | The template to use for when there’s no changes. Default: `"* No changes"`.                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `categories`                     | Optional | Define how changes are filtered, grouped, and versioned. Categories support `type`, `when`, `exclusive`, `collapse-after`, and `semver-increment`. Refer to [Categorize Changes](#categorize-changes).                                                                                                                                                                                                                                                                          |
+| `include-base-refs`              | Optional | Restrict changes to pull requests merged into one of these base branches. Entries match exactly, or as a regex when written as `/pattern/flags`. Setting this replaces the default rather than adding to it; set it to `[]` to report every base branch. Refer to [Filter Pull Requests by Base Branch](#filter-pull-requests-by-base-branch). Default: `['development', 'master', 'main']`                                                                                     |
 | `exclude-contributors`           | Optional | Exclude specific usernames from the generated `$CONTRIBUTORS` variable. Refer to [Exclude Contributors](#exclude-contributors) to learn more about this option.                                                                                                                                                                                                                                                                                                                 |
 | `new-contributor-template`       | Optional | The template to use for each new contributor in `$NEW_CONTRIBUTORS`. Use [new contributor template variables](#new-contributor-template-variables) to insert values. Default: `"* $AUTHOR_MENTION made their first contribution in #$NUMBER"`.                                                                                                                                                                                                                                  |
 | `no-new-contributor-template`    | Optional | The template to use for `$NEW_CONTRIBUTORS` when there are no new contributors to list. Default: `"* No new contributors"`.                                                                                                                                                                                                                                                                                                                                                     |
@@ -516,6 +517,61 @@ categories:
 
 Changes with the label "app-foo" will be the only changes included in the
 release draft.
+
+## Filter Pull Requests by Base Branch
+
+GitHub associates a commit with _every_ merged pull request that contains it.
+When you branch off a long-lived story branch and merge follow-up work into it,
+those follow-up pull requests end up in the release notes next to the pull
+request that merged the story branch itself, so the same change is reported
+twice: once as the story and once as each of its parts.
+
+The `include-base-refs` option restricts the release notes to pull requests
+merged into the branches you actually release from. It defaults to the standard
+branches:
+
+```yml
+include-base-refs:
+  - 'development'
+  - 'master'
+  - 'main'
+```
+
+With that default, a pull request merged into `enhancement/some-story` is left
+out, while the pull request that merged `enhancement/some-story` into
+`development` is kept. Both mainline names are covered, so a repository that
+releases from `main` works without configuring anything.
+
+Setting the option **replaces** the default, it does not add to it. A repository
+that releases from a differently named branch has to name every branch it wants
+reported:
+
+```yml
+include-base-refs:
+  - 'trunk'
+  - 'staging'
+```
+
+Entries match the base branch name exactly, so `main` does not select
+`maintenance/1.x`. To match a set of branches, write the entry as a regular
+expression:
+
+```yml
+include-base-refs:
+  - '/^(main|release\/.+)$/'
+```
+
+Set it to an empty list to turn the filter off entirely and report pull requests
+against every base branch:
+
+```yml
+include-base-refs: []
+```
+
+If the branch you release from is not in the list, the release notes come out
+empty rather than raising an error, so double-check the names. A pull request
+whose base ref is missing from the API response is kept rather than dropped, so
+an unexpected response shrinks the release notes for no one.
 
 ## Exclude Contributors
 

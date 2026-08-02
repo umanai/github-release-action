@@ -49,7 +49,7 @@
                         ]
                       },
                       "merged": true,
-                      "baseRefName": "rebase-merging",
+                      "baseRefName": "master",
                       "headRefName": "add-documentation"
                     }
                   ]
@@ -93,7 +93,7 @@
                         ]
                       },
                       "merged": true,
-                      "baseRefName": "rebase-merging",
+                      "baseRefName": "master",
                       "headRefName": "add-documentation"
                     }
                   ]
@@ -133,7 +133,7 @@
                         "nodes": []
                       },
                       "merged": true,
-                      "baseRefName": "rebase-merging",
+                      "baseRefName": "master",
                       "headRefName": "chore/update-dependencies"
                     }
                   ]
@@ -173,7 +173,7 @@
                         "nodes": []
                       },
                       "merged": true,
-                      "baseRefName": "rebase-merging",
+                      "baseRefName": "master",
                       "headRefName": "chore/update-dependencies"
                     }
                   ]
@@ -220,7 +220,7 @@
                         ]
                       },
                       "merged": true,
-                      "baseRefName": "rebase-merging",
+                      "baseRefName": "master",
                       "headRefName": "fix/bug-fixes"
                     }
                   ]
@@ -267,7 +267,7 @@
                         ]
                       },
                       "merged": true,
-                      "baseRefName": "rebase-merging",
+                      "baseRefName": "master",
                       "headRefName": "fix/bug-fixes"
                     }
                   ]
@@ -314,7 +314,7 @@
                         ]
                       },
                       "merged": true,
-                      "baseRefName": "rebase-merging",
+                      "baseRefName": "master",
                       "headRefName": "feature/big-feature"
                     }
                   ]
@@ -361,7 +361,7 @@
                         ]
                       },
                       "merged": true,
-                      "baseRefName": "rebase-merging",
+                      "baseRefName": "master",
                       "headRefName": "feature/big-feature"
                     }
                   ]
@@ -408,7 +408,7 @@
                         ]
                       },
                       "merged": true,
-                      "baseRefName": "rebase-merging",
+                      "baseRefName": "master",
                       "headRefName": "feature/alien-technology"
                     }
                   ]

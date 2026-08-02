@@ -50,7 +50,7 @@
                         ]
                       },
                       "merged": true,
-                      "baseRefName": "overlapping-label",
+                      "baseRefName": "master",
                       "headRefName": "add-documentation"
                     }
                   ]
@@ -91,7 +91,7 @@
                         "nodes": []
                       },
                       "merged": true,
-                      "baseRefName": "overlapping-label",
+                      "baseRefName": "master",
                       "headRefName": "chore/update-dependencies"
                     }
                   ]
@@ -142,7 +142,7 @@
                         ]
                       },
                       "merged": true,
-                      "baseRefName": "overlapping-label",
+                      "baseRefName": "master",
                       "headRefName": "fix/bug-fixes"
                     }
                   ]
@@ -190,7 +190,7 @@
                         ]
                       },
                       "merged": true,
-                      "baseRefName": "overlapping-label",
+                      "baseRefName": "master",
                       "headRefName": "feature/big-feature"
                     }
                   ]
@@ -238,7 +238,7 @@
                         ]
                       },
                       "merged": true,
-                      "baseRefName": "overlapping-label",
+                      "baseRefName": "master",
                       "headRefName": "feature/alien-technology"
                     }
                   ]
